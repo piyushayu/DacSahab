@@ -1,0 +1,15 @@
+{
+  "name": "dacsahab",
+  "version": "1.0.0",
+  "description": "Online doctors and medical consultants - DacSahab",
+  "scripts": {
+    "client": "npm --prefix client run dev",
+    "server": "npm --prefix server run dev",
+    "prisma:generate": "npm --prefix server run prisma:generate",
+    "prisma:migrate": "npm --prefix server run prisma:migrate",
+    "prisma:studio": "npm --prefix server run prisma:studio"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
