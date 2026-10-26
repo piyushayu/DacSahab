@@ -2,15 +2,26 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// Separate output so the Next.js app can import the same schema's client
+// without reaching into the Express server's node_modules.
+generator clientApp {
+  provider = "prisma-client-js"
+  output   = "../../client/src/generated/prisma"
+}
+
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 enum Role {
   PATIENT
   DOCTOR
   ADMIN
+}
+
+enum AccountKind {
+  USER
+  DOCTOR
 }
 
 enum AppointmentStatus {
@@ -21,32 +32,134 @@ enum AppointmentStatus {
 }
 
 model User {
-  id            String         @id @default(uuid())
-  email         String         @unique
-  name          String
-  password      String?
-  phone         String?
-  role          Role           @default(PATIENT)
-  doctorProfile Doctor?
-  appointments  Appointment[]  @relation("PatientAppointments")
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id                    String    @id @default(uuid())
+  email                 String    @unique
+  name                  String
+  passwordHash          String?
+  image                 String?
+  emailVerified         DateTime?
+  role                  Role      @default(PATIENT)
+  tokenVersion          Int       @default(0)
+  onboardingCompleted   Boolean   @default(false)
+  onboardingCompletedAt DateTime?
+
+  dateOfBirth           DateTime?
+  gender                String?
+
+  identity              LoginIdentity?
+  accounts              Account[]
+  refreshTokens         RefreshToken[]
+  appointments          Appointment[] @relation("PatientAppointments")
+
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([role])
 }
 
 model Doctor {
-  id             String         @id @default(uuid())
-  userId         String         @unique
-  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  specialization String
-  qualification  String
-  experienceYrs  Int            @default(1)
-  consultationFee Float         @default(500)
-  bio            String?
-  available      Boolean        @default(true)
-  appointments   Appointment[]
-  reviews        Review[]
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  id                    String    @id @default(uuid())
+  email                 String    @unique
+  name                  String
+  passwordHash          String?
+  image                 String?
+  emailVerified         DateTime?
+  role                  Role      @default(DOCTOR)
+  tokenVersion          Int       @default(0)
+  phone                 String?
+
+  licenseNumber         String?   @unique
+  specialization        String?
+  experience            Int?
+  verified              Boolean   @default(false)
+  onboardingCompleted   Boolean   @default(false)
+  onboardingCompletedAt DateTime?
+
+  identity              LoginIdentity?
+  accounts              DoctorAccount[]
+  refreshTokens         RefreshToken[]
+  appointments          Appointment[] @relation("DoctorAppointments")
+  reviews               Review[]
+
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([role])
+  @@index([verified])
+}
+
+// One email = one account, whether that account is a patient (User) or a doctor.
+model LoginIdentity {
+  email     String      @id
+  kind      AccountKind
+  userId    String?     @unique
+  doctorId  String?     @unique
+  user      User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  doctor    Doctor?     @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?  @db.Text
+  access_token      String?  @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?  @db.Text
+  session_state     String?
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@id([provider, providerAccountId])
+  @@index([userId])
+}
+
+model DoctorAccount {
+  doctorId          String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?  @db.Text
+  access_token      String?  @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?  @db.Text
+  session_state     String?
+  doctor            Doctor   @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@id([provider, providerAccountId])
+  @@index([doctorId])
+}
+
+model RefreshToken {
+  id         String      @id @default(uuid())
+  tokenHash  String      @unique
+  familyId   String
+  kind       AccountKind
+  userId     String?
+  doctorId   String?
+  user       User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  doctor     Doctor?     @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  replacedBy String?
+  userAgent  String?
+  ip         String?
+  createdAt  DateTime    @default(now())
+
+  @@index([userId])
+  @@index([doctorId])
+  @@index([familyId])
+  @@index([expiresAt])
 }
 
 model Appointment {
@@ -54,13 +167,17 @@ model Appointment {
   patientId       String
   patient         User              @relation("PatientAppointments", fields: [patientId], references: [id])
   doctorId        String
-  doctor          Doctor            @relation(fields: [doctorId], references: [id])
+  doctor          Doctor            @relation("DoctorAppointments", fields: [doctorId], references: [id])
   scheduledAt     DateTime
   status          AppointmentStatus @default(PENDING)
   notes           String?
   prescriptionUrl String?
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
+
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([scheduledAt])
 }
 
 model Review {
@@ -70,4 +187,6 @@ model Review {
   rating    Int      @default(5)
   comment   String?
   createdAt DateTime @default(now())
+
+  @@index([doctorId])
 }
