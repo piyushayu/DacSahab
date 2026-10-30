@@ -2,8 +2,6 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// Separate output so the Next.js app can import the same schema's client
-// without reaching into the Express server's node_modules.
 generator clientApp {
   provider = "prisma-client-js"
   output   = "../../client/src/generated/prisma"
@@ -31,26 +29,34 @@ enum AppointmentStatus {
   CANCELLED
 }
 
+enum Gender {
+  Male 
+  Female
+  LGBTQ
+}
+
 model User {
   id                    String    @id @default(uuid())
   email                 String    @unique
   name                  String
   passwordHash          String?
   image                 String?
-  emailVerified         DateTime?
+  emailVerified         Boolean   @default(false)
   role                  Role      @default(PATIENT)
-  tokenVersion          Int       @default(0)
+  tokenVersion          Int       @default(0) // use to check if the refesh token that we sent is of same version or not 
+  // if not then revoke the refresh token from all device 
+  // it's good to check this before making new refresh token
   onboardingCompleted   Boolean   @default(false)
   onboardingCompletedAt DateTime?
 
-  dateOfBirth           DateTime?
-  gender                String?
+  age                   Int?
+  gender                Gender?   @default(Female)
 
   identity              LoginIdentity?
   accounts              Account[]
   refreshTokens         RefreshToken[]
-  appointments          Appointment[] @relation("PatientAppointments")
-
+  appointments          Appointment[]
+  reviews               Review[]
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
@@ -66,7 +72,7 @@ model Doctor {
   emailVerified         DateTime?
   role                  Role      @default(DOCTOR)
   tokenVersion          Int       @default(0)
-  phone                 String?
+  phone                 String?  
 
   licenseNumber         String?   @unique
   specialization        String?
@@ -78,7 +84,7 @@ model Doctor {
   identity              LoginIdentity?
   accounts              DoctorAccount[]
   refreshTokens         RefreshToken[]
-  appointments          Appointment[] @relation("DoctorAppointments")
+  appointments          Appointment[] 
   reviews               Review[]
 
   createdAt             DateTime  @default(now())
@@ -88,7 +94,6 @@ model Doctor {
   @@index([verified])
 }
 
-// One email = one account, whether that account is a patient (User) or a doctor.
 model LoginIdentity {
   email     String      @id
   kind      AccountKind
@@ -152,7 +157,6 @@ model RefreshToken {
   expiresAt  DateTime
   revokedAt  DateTime?
   replacedBy String?
-  userAgent  String?
   ip         String?
   createdAt  DateTime    @default(now())
 
@@ -165,28 +169,35 @@ model RefreshToken {
 model Appointment {
   id              String            @id @default(uuid())
   patientId       String
-  patient         User              @relation("PatientAppointments", fields: [patientId], references: [id])
+  patient         User              @relation(fields: [patientId], references: [id])
   doctorId        String
-  doctor          Doctor            @relation("DoctorAppointments", fields: [doctorId], references: [id])
-  scheduledAt     DateTime
+  doctor          Doctor            @relation(fields: [doctorId], references: [id])
+  scheduleID      String
+  scheduledAt     Timeperiod        @relation(fields: [scheduleID], references: [id])
   status          AppointmentStatus @default(PENDING)
-  notes           String?
-  prescriptionUrl String?
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
 
   @@index([patientId])
   @@index([doctorId])
-  @@index([scheduledAt])
+  // @@index([scheduledAt])
 }
 
 model Review {
   id        String   @id @default(uuid())
+  userId   String
+  user     User      @relation(fields: [userId] , references: [id] , onDelete: Cascade)
   doctorId  String
   doctor    Doctor   @relation(fields: [doctorId], references: [id], onDelete: Cascade)
   rating    Int      @default(5)
-  comment   String?
   createdAt DateTime @default(now())
 
   @@index([doctorId])
+}
+
+model Timeperiod {
+  id    String @id @default(uuid())
+  from  String?
+  to    String?
+  appointment  Appointment[]
 }
