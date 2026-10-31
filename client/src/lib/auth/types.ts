@@ -33,6 +33,5 @@ export type SessionAccount = {
 };
 
 export type SessionMeta = {
-  userAgent?: string | null;
   ip?: string | null;
 };

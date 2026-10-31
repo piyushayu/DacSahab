@@ -9,7 +9,6 @@ export async function requestMeta(): Promise<SessionMeta> {
   const forwarded = headerStore.get("x-forwarded-for");
 
   return {
-    userAgent: headerStore.get("user-agent"),
     ip: forwarded?.split(",")[0]?.trim() || headerStore.get("x-real-ip"),
   };
 }

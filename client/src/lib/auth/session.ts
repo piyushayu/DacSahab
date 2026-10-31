@@ -52,7 +52,6 @@ function refreshRowData(
     userId: account.kind === "USER" ? account.id : null,
     doctorId: account.kind === "DOCTOR" ? account.id : null,
     expiresAt: new Date(Date.now() + REFRESH_TTL_SECONDS * 1000),
-    userAgent: meta.userAgent ?? null,
     ip: meta.ip ?? null,
   };
 }

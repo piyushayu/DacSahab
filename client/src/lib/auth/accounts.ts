@@ -9,6 +9,12 @@ export type AccountRecord =
   | { kind: "USER"; user: User }
   | { kind: "DOCTOR"; doctor: Doctor };
 
+export type Input = {
+  name: string;
+  email: string;
+  passwordHash: string;
+}
+
 export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
@@ -58,11 +64,8 @@ export async function getAccountById(
   return doctor ? { kind: "DOCTOR", doctor } : null;
 }
 
-export async function createPatientAccount(input: {
-  name: string;
-  email: string;
-  passwordHash: string;
-}): Promise<AccountRecord> {
+export async function createPatientAccount(input: Input
+): Promise<AccountRecord> {
   const email = normalizeEmail(input.email);
 
   return prisma.$transaction(async (tx) => {
@@ -83,11 +86,8 @@ export async function createPatientAccount(input: {
   });
 }
 
-export async function createDoctorAccount(input: {
-  name: string;
-  email: string;
-  passwordHash: string;
-}): Promise<AccountRecord> {
+export async function createDoctorAccount(input: Input
+): Promise<AccountRecord> {
   const email = normalizeEmail(input.email);
 
   return prisma.$transaction(async (tx) => {

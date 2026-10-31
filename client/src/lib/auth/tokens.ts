@@ -108,14 +108,3 @@ export async function verifyRefreshToken(token: string): Promise<RefreshClaims> 
   return payload as unknown as RefreshClaims;
 }
 
-export function readUnverifiedSubject(token: string): string | null {
-  try {
-    const [, payload] = token.split(".");
-    const parsed = JSON.parse(
-      Buffer.from(payload, "base64url").toString("utf8"),
-    ) as JWTPayload;
-    return typeof parsed.sub === "string" ? parsed.sub : null;
-  } catch {
-    return null;
-  }
-}
