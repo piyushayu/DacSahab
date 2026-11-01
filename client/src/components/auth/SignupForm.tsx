@@ -141,44 +141,10 @@ export function SignupForm({ initialRole = "user" }: SignupFormProps) {
           )}
         </div>
 
-        <div>
-          <label className="flex items-start gap-2.5 text-xs text-slate-600 dark:text-slate-400">
-            <input
-              type="checkbox"
-              name="terms"
-              className="mt-0.5 h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
-            />
-            <span>
-              I agree to the{" "}
-              <a
-                href="#"
-                onClick={(event) => event.preventDefault()}
-                className="font-medium text-teal-600 dark:text-teal-400 hover:underline"
-              >
-                Terms of Service
-              </a>{" "}
-              and{" "}
-              <a
-                href="#"
-                onClick={(event) => event.preventDefault()}
-                className="font-medium text-teal-600 dark:text-teal-400 hover:underline"
-              >
-                Privacy Policy
-              </a>
-              .
-            </span>
-          </label>
-          {state.fieldErrors?.terms ? (
-            <p className="mt-1.5 text-xs text-red-600">
-              {state.fieldErrors.terms}
-            </p>
-          ) : null}
-        </div>
-
         <button
           type="submit"
           disabled={pending}
-          className="w-full py-3.5 px-4 rounded-xl font-semibold text-white bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 active:scale-[0.99] shadow-md shadow-teal-600/20 transition-all cursor-pointer text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+          className="w-full py-3.5 px-4 rounded-xl font-semibold text-white bg-linear-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 active:scale-[0.99] shadow-md shadow-teal-600/20 transition-all cursor-pointer text-sm disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {pending
             ? "Creating account…"

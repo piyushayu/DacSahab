@@ -69,7 +69,7 @@ model Doctor {
   name                  String
   passwordHash          String?
   image                 String?
-  emailVerified         DateTime?
+  emailVerified         Boolean?  @default(false)
   role                  Role      @default(DOCTOR)
   tokenVersion          Int       @default(0)
   phone                 String?  

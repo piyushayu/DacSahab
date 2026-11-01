@@ -51,7 +51,7 @@ async function touchUser(user: User, profile: GoogleProfile): Promise<void> {
   await prisma.user.update({
     where: { id: user.id },
     data: {
-      emailVerified: user.emailVerified ?? new Date(),
+      emailVerified: user.emailVerified ?? false,
       image: user.image ?? profile.picture ?? null,
     },
   });
@@ -61,7 +61,7 @@ async function touchDoctor(doctor: Doctor, profile: GoogleProfile): Promise<void
   await prisma.doctor.update({
     where: { id: doctor.id },
     data: {
-      emailVerified: doctor.emailVerified ?? new Date(),
+      emailVerified: doctor.emailVerified ?? false,
       image: doctor.image ?? profile.picture ?? null,
     },
   });
@@ -165,7 +165,7 @@ export async function handleGoogleSignIn(input: {
             name: profile.name?.trim() || email.split("@")[0],
             email,
             image: profile.picture ?? null,
-            emailVerified: new Date(),
+            emailVerified: true,
             role: "DOCTOR",
           },
         });
@@ -190,7 +190,7 @@ export async function handleGoogleSignIn(input: {
           name: profile.name?.trim() || email.split("@")[0],
           email,
           image: profile.picture ?? null,
-          emailVerified: new Date(),
+          emailVerified: true,
           role: "PATIENT",
         },
       });

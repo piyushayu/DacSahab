@@ -50,8 +50,7 @@ async function rotate(request: NextRequest): Promise<Response> {
   const headerStore = await headers();
 
   try {
-    await rotateSession(raw, {
-      userAgent: headerStore.get("user-agent"),
+    await rotateSession(raw, { 
       ip: clientIp(
         headerStore.get("x-forwarded-for") ?? headerStore.get("x-real-ip"),
       ),
